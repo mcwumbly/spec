@@ -1,8 +1,17 @@
 # Buildpack Interface Specification
 
-This document specifies the interface a buildpack must implement to be compatible with the [lifecycle](#lifecycle.md).
+This document specifies the interface between a single lifecycle and one or more buildpacks.
 
 A lifecycle is a program that uses buildpacks to transform application source code into an OCI image containing the compiled application.
+
+This is accomplished in four phases:
+
+1. **Detection,** where an optimal selection of compatible buildpacks is chosen.
+2. **Analysis,** where metadata about OCI layers generated during a previous build are made available to buildpacks.
+3. **Build,** where buildpacks use that metadata to generate only the OCI layers that need to be replaced.
+4. **Export,** where the remote layers are replaced by the generated layers.
+
+The `ENTRYPOINT` of the OCI image contains logic implemented by the lifecycle that executes during the **Launch** phase.
 
 ## Table of Contents
 
@@ -32,22 +41,10 @@ A lifecycle is a program that uses buildpacks to transform application source co
     5. [Layer Content Metadata (TOML)](#layer-content-metadata-toml)
     6. [buildpack.toml (TOML)](#buildpacktoml-toml)
 
-## Buildpack
-
-A buildpack is a module invoked by the lifecycle that may output image layers, change the environment of subsequent buildpacks,
-
-A buildpack minimally has the following structure:
-
-```bash
-├── bin
-│   ├── build +x
-│   └── detect +x
-└── buildpack.toml
-```
-
 ## Buildpack Interface
 
-The following specifies the interface that MUST be implemented by executables in each buildpack.
+The following specifies the interface implemented by executables in each buildpack.
+The lifecycle MUST invoke these executables as described in the Phase sections.
 
 ### Key
 
@@ -162,8 +159,6 @@ Therefore, the lifecycle MUST consider such layers to be launch layers that are 
 The lifecycle MUST consider layers that are marked `launch = false` and `build = false` to be build layers that are not accessible to subsequent buildpacks.
 
 ## App Interface
-
-The source code under consideration 
 
 | Output           | Description
 |------------------|----------------------------------------------
